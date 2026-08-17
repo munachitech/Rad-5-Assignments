@@ -96,9 +96,7 @@ function getClassAverage(students) {
 
 
 // PROCESS STUDENTS
-// ==============================
-
-console.log("\n===== STUDENT RESULT ANALYZER =====");
+console.log("\nSTUDENT RESULT ANALYZER");
 
 for (const student of students) {
 
@@ -129,7 +127,6 @@ Average: ${average}
 Grade: ${grade}
 Status: ${status}
 Subjects: ${numberOfSubjects}
-==============================
 `);
 }
 
@@ -152,5 +149,5 @@ function scopeExample() {
 
   console.log(secretMessage);
 }
-
 scopeExample();
+// var doesn't respect functions, just loop satements, also leads to bugs.
