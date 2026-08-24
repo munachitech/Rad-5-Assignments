@@ -101,10 +101,6 @@ const memoize = (func) => {
 };
 
 
-// ===============================
-// EXAMPLE USAGE
-// ===============================
-
 // Deep Clone
 const original = {
   name: "Ada",
