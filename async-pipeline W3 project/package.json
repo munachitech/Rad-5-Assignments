@@ -1,0 +1,10 @@
+{
+  "name": "async-pipeline",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CLI Async Data Pipeline Manager",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
