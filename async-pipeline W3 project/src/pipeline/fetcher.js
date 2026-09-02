@@ -41,6 +41,7 @@ export async function fetchWithRetry(source, options = {}) {
       }
     );
   } catch (error) {
+    //makes sure we have a a readable error message.
     const message = error instanceof Error ? error.message : String(error);
     logError(`${source.name}: Failed after all retries - ${message}`);
 

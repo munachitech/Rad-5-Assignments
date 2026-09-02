@@ -3,6 +3,7 @@ export function fetchUsers() {
     const requestDelay = 500 + Math.random() * 1500;
 
     setTimeout(() => {
+      // random failure
       if (Math.random() > 0.2) {
         resolve([
           { id: 1, name: "Ada Lovelace", email: "ada@example.com", isActive: true },
