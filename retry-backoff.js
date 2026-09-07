@@ -57,7 +57,7 @@ class RetryableOperation {
     }
 
     // If every attempt failed, throw the final error
-    throw new Error(
+    throw new Error(''
       `All ${this.maxRetries} retries failed: ${lastError.message}`
     );
   }
