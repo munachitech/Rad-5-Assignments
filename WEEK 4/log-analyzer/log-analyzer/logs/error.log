@@ -1,0 +1,6 @@
+2026-08-18T09:00:00.000Z [ERROR] Database connection failed: timeout
+2026-08-18T09:05:00.000Z [ERROR] Authentication failed for user: jane@example.com
+2026-08-18T09:10:00.000Z [WARN] Slow query detected: 3000ms
+2026-08-18T10:00:00.000Z [ERROR] File not found: /uploads/photo.jpg
+2026-08-18T10:15:00.000Z [ERROR] Database connection failed: timeout
+2026-08-18T10:20:00.000Z [INFO] Request processed

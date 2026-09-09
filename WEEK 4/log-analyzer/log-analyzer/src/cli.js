@@ -1,63 +1,124 @@
 const fs = require("fs");
-const { parseLogPath } = require("./parser");
+const path = require("path");
+
+const { parseLogFile } = require("./parser");
+
 const {
   countByLevel,
   getErrors,
   getTopErrors,
   getTimeline,
-  getErrorTimeline,
   getSummary
 } = require("./analyzer");
+
 const {
   printCountReport,
   printErrors,
   printTopErrors,
   printTimeline,
-  printReport
+  printReport,
+  printJsonReport
 } = require("./reporter");
 
-function printUsage() {
-  console.log("Usage: node index.js <command> <log-file-or-directory>\n");
-  console.log("Commands:");
-  console.log("  count       Count entries by log level");
-  console.log("  errors      List all errors");
-  console.log("  top-errors  Show most common errors");
-  console.log("  timeline    Show errors over time");
-  console.log("  report      Full analysis report");
+function getLogFiles(inputPath) {
+  const fullPath = path.resolve(inputPath);
+
+  if (!fs.existsSync(fullPath)) {
+    console.error(`Error: File or directory not found: ${inputPath}`);
+    process.exit(1);
+  }
+
+  const stats = fs.statSync(fullPath);
+
+  if (stats.isFile()) {
+    return [fullPath];
+  }
+
+  if (stats.isDirectory()) {
+    return fs
+      .readdirSync(fullPath)
+      .filter(file => file.endsWith(".log"))
+      .map(file => path.join(fullPath, file));
+  }
+
+  return [];
 }
 
-function run(argv) {
-  const [command, ...args] = argv;
-
-  if (!command) {
-    printUsage();
-    process.exit(1);
-  }
-
-  const target = args[0];
-
-  if (!target) {
-    console.error("Error: Please provide a log file or directory path");
-    process.exit(1);
-  }
-
-  if (!fs.existsSync(target)) {
-    console.error(`Error: Path not found: ${target}`);
-    process.exit(1);
-  }
-
-  let entries, files;
-  try {
-    ({ entries, files } = parseLogPath(target));
-  } catch (err) {
-    console.error(`Error reading logs: ${err.message}`);
-    process.exit(1);
-  }
+function loadEntries(inputPath) {
+  const files = getLogFiles(inputPath);
 
   if (files.length === 0) {
-    console.error(`Error: No .log files found in ${target}`);
+    console.error("Error: No .log files found.");
     process.exit(1);
   }
+
+  let entries = [];
+
+  files.forEach(file => {
+    entries = entries.concat(parseLogFile(file));
+  });
+
+  return entries;
+}
+
+function parseOptions(args) {
+  const options = {};
+
+  args.forEach(arg => {
+    if (arg.startsWith("--level=")) {
+      options.level = arg.split("=")[1].toUpperCase();
+    }
+
+    if (arg.startsWith("--from=")) {
+      options.from = arg.split("=")[1];
+    }
+
+    if (arg.startsWith("--to=")) {
+      options.to = arg.split("=")[1];
+    }
+
+    if (arg.startsWith("--output=")) {
+      options.output = arg.split("=")[1];
+    }
+  });
+
+  return options;
+}
+
+function filterEntries(entries, options) {
+  return entries.filter(entry => {
+    if (options.level && entry.level !== options.level) {
+      return false;
+    }
+
+    if (options.from) {
+      const fromDate = new Date(options.from);
+
+      if (entry.timestamp < fromDate) {
+        return false;
+      }
+    }
+
+    if (options.to) {
+      const toDate = new Date(options.to);
+
+      toDate.setUTCDate(toDate.getUTCDate() + 1);
+
+      if (entry.timestamp >= toDate) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
+
+function run(command, inputPath, args) {
+  const options = parseOptions(args);
+
+  let entries = loadEntries(inputPath);
+
+  entries = filterEntries(entries, options);
 
   switch (command) {
     case "count": {
@@ -79,22 +140,76 @@ function run(argv) {
     }
 
     case "timeline": {
-      const timeline = getErrorTimeline(entries);
-      printTimeline(timeline, "Errors by Hour");
+      const timeline = getTimeline(entries);
+      printTimeline(timeline);
       break;
     }
 
     case "report": {
       const summary = getSummary(entries);
-      printReport(summary, target);
+
+      printReport(summary, inputPath);
+
+      if (options.output) {
+        printJsonReport(summary, options.output);
+      }
+
       break;
     }
 
     default:
       console.error(`Unknown command: ${command}`);
-      printUsage();
       process.exit(1);
   }
 }
 
-module.exports = { run, printUsage };
+function watchFile(filePath) {
+  const fullPath = path.resolve(filePath);
+
+  if (!fs.existsSync(fullPath)) {
+    console.error(`Error: File not found: ${filePath}`);
+    process.exit(1);
+  }
+
+  console.log(`Watching ${filePath} for new log entries...`);
+  console.log("Press Ctrl+C to stop.\n");
+
+  let lastSize = fs.statSync(fullPath).size;
+
+  fs.watch(fullPath, () => {
+    const currentSize = fs.statSync(fullPath).size;
+
+    if (currentSize > lastSize) {
+      const stream = fs.createReadStream(fullPath, {
+        start: lastSize,
+        end: currentSize
+      });
+
+      let newData = "";
+
+      stream.on("data", chunk => {
+        newData += chunk.toString();
+      });
+
+      stream.on("end", () => {
+        const lines = newData.split(/\r?\n/);
+
+        lines
+          .map(line => require("./parser").parseLogLine(line))
+          .filter(entry => entry !== null)
+          .forEach(entry => {
+            console.log(
+              `[${entry.timestamp.toISOString()}] [${entry.level}] ${entry.message}`
+            );
+          });
+
+        lastSize = currentSize;
+      });
+    }
+  });
+}
+
+module.exports = {
+  run,
+  watchFile
+};
