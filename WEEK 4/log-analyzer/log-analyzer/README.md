@@ -20,4 +20,4 @@ A Node.js command-line tool for parsing, analyzing, and reporting information fr
 Clone or download the project and run:
 
 ```bash
-npm install
+npm installnn
