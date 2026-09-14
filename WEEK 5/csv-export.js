@@ -2,4 +2,11 @@ function exportToCSV(data) {
   return data.map(row => row.join(",")).join("\n");
 }
 
-module.exports = exportToCSV;
+function addCSVHeader(header) {
+  return header.join(",");
+}
+
+module.exports = {
+  exportToCSV,
+  addCSVHeader
+};
