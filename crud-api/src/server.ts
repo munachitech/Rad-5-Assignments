@@ -1,16 +1,15 @@
 import express from "express";
 import productRoutes from "./routes/productRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(express.json());
 
-// Routes
+app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 
-// Home route
 app.get("/", (_req, res) => {
   res.json({
     message: "CRUD API is running"
