@@ -9,9 +9,13 @@ export interface Product {
 export interface User {
   id: number;
   username: string;
-  password: string;
+  passwordHash: string;
 }
-
+export type PublicUser = Omit<User, "passwordHash">;
+export interface LoginResponse {
+  token: string;
+  user: PublicUser;
+}
 export interface AuthRequest extends Request {
   userId?: number;
 }

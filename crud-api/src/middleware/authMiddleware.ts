@@ -17,6 +17,7 @@ export const authenticate = (
   next: NextFunction
 ) => {
   const authorization = req.headers.authorization;
+  console.log("Authorization header:", authorization);
 
   if (!authorization) {
     res.status(401).json({
