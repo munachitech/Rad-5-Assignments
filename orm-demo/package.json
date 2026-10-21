@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.18",
-    "prisma": "^8.0.0-rc.23"
+    "prisma": "^8.0.0-rc.23",
+    "tsx": "^4.23.15"
   }
 }
