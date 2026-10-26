@@ -1,6 +1,6 @@
 # Typed Store Project
 
-This project is a beginner-friendly TypeScript store manager that keeps products and orders in an in-memory data store. It demonstrates typed modeling, generic data access, Result-based error handling, and safe CLI validation.
+This project includes a TypeScript store manager CLI and a PostgreSQL-backed Express API using Prisma. The CLI continues to demonstrate typed modeling, generic data access, Result-based error handling, and safe validation.
 
 ## Install dependencies
 
@@ -24,14 +24,32 @@ npm run build
 
 This compiles the project into the `dist` folder.
 
+## Run the API
+
+Set `DATABASE_URL` and `JWT_SECRET` in the environment, then run:
+
+```bash
+npm start
+```
+
+The API listens on port `3000` by default; set `PORT` to override it. All routes are under `/api`.
+
+- `GET /api/health`: health check.
+- `POST /api/auth/register` and `POST /api/auth/login`: create an account or receive a JWT.
+- `GET /api/products` and `GET /api/products/:id`: public product listing and detail.
+- `POST /api/products`, `PATCH /api/products/:id`, and `DELETE /api/products/:id`: admin-only product management.
+- `POST /api/orders` and `GET /api/orders`: create an order or list orders for the authenticated customer; admins can list all orders.
+
+Send authenticated requests with `Authorization: Bearer <token>`. Public registration always creates a customer account.
+
 ## Run the CLI
 
 ```bash
-npm start -- add-product "Laptop" 999 electronics 10
-npm start -- list
-npm start -- place-order 1 2
-npm start -- report
-npm start -- low-stock 5
+npm run cli -- add-product "Laptop" 999 electronics 10
+npm run cli -- list
+npm run cli -- place-order 1 2
+npm run cli -- report
+npm run cli -- low-stock 5
 ```
 
 ## CLI commands
@@ -52,7 +70,8 @@ npm start -- low-stock 5
 - `src/services/orderService.ts`: order creation and stock deduction logic.
 - `src/services/reportService.ts`: reporting logic for low stock and top sellers.
 - `src/cli.ts`: CLI parsing, validation, and command routing.
-- `src/index.ts`: application entry point.
+- `src/index.ts`: CLI application entry point.
+- `src/server.ts`: Express API entry point.
 - `docs/types.md`: examples of TypeScript problems and fixes.
 
 ## Major TypeScript concepts demonstrated
