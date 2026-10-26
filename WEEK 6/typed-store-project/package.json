@@ -5,6 +5,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
+    "watch": "tsc --watch",
     "start": "node dist/src/server.js",
     "cli": "node dist/src/index.js"
   },
