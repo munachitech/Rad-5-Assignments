@@ -4,7 +4,7 @@ import {
     productSchema,
     productUpdateSchema,
 } from "../schemas/product.schema";
-import { sendValidationError } from "../utils/validation";
+import { ApiError } from "../utils/api-error";
 
 export async function listProducts(
     _req: Request,
@@ -24,18 +24,14 @@ export async function getProduct(
     const productId = req.params.id;
 
     if (typeof productId !== "string") {
-        res.status(400).json({ error: "Invalid product ID." });
-        return;
+        throw new ApiError(400, "Invalid product ID.");
     }
     const product = await prisma.product.findUnique({
         where: { id: productId },
     });
 
     if (!product) {
-        res.status(404).json({
-            error: "Product not found.",
-        });
-        return;
+        throw new ApiError(404, "Product not found.");
     }
 
     res.status(200).json(product);
@@ -45,15 +41,10 @@ export async function createProduct(
     req: Request,
     res: Response,
 ): Promise<void> {
-    const parsed = productSchema.safeParse(req.body);
-
-    if (!parsed.success) {
-        sendValidationError(res, parsed.error.issues);
-        return;
-    }
+    const parsed = productSchema.parse(req.body);
 
     const product = await prisma.product.create({
-        data: parsed.data,
+        data: parsed,
     });
 
     res.status(201).json(product);
@@ -64,36 +55,26 @@ export async function updateProduct(
     res: Response,
 ): Promise<void> {
     const productId = req.params.id;
-    if(!productId) {
-        res.status(400).json({ error: "Product ID is required." });
-        return;
+    if (!productId) {
+        throw new ApiError(400, "Product ID is required.");
     }
 
     if (typeof productId !== "string") {
-        res.status(400).json({ error: "Invalid product ID." });
-        return;
+        throw new ApiError(400, "Invalid product ID.");
     }
-    const parsed = productUpdateSchema.safeParse(req.body);
-
-    if (!parsed.success) {
-        sendValidationError(res, parsed.error.issues);
-        return;
-    }
+    const parsed = productUpdateSchema.parse(req.body);
 
     const existing = await prisma.product.findUnique({
         where: { id: productId },
     });
 
     if (!existing) {
-        res.status(404).json({
-            error: "Product not found.",
-        });
-        return;
+        throw new ApiError(404, "Product not found.");
     }
 
     const product = await prisma.product.update({
         where: { id: productId },
-        data: parsed.data,
+        data: parsed,
     });
 
     res.status(200).json(product);
@@ -106,22 +87,17 @@ export async function deleteProduct(
     const productId = req.params.id;
 
     if (!productId) {
-        res.status(400).json({ error: "Product ID is required." });
-        return;
+        throw new ApiError(400, "Product ID is required.");
     }
     if (typeof productId !== "string") {
-        res.status(400).json({ error: "Invalid product ID." });
-        return;
+        throw new ApiError(400, "Invalid product ID.");
     }
     const existing = await prisma.product.findUnique({
         where: { id: productId },
     });
 
     if (!existing) {
-        res.status(404).json({
-            error: "Product not found.",
-        });
-        return;
+        throw new ApiError(404, "Product not found.");
     }
 
     const product = await prisma.product.delete({

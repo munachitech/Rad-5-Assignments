@@ -3,7 +3,6 @@ import { prisma } from "../db";
 import { Role } from "../../generated/prisma/client";
 import { orderSchema } from "../schemas/order.schema";
 import { ApiError } from "../utils/api-error";
-import { sendValidationError } from "../utils/validation";
 
 export async function createOrder(
   req: Request,
@@ -12,31 +11,20 @@ export async function createOrder(
   const auth = req.auth;
 
   if (!auth) {
-    res.status(401).json({
-      error: "Authentication is required.",
-    });
-    return;
+    throw new ApiError(401, "Authentication is required.");
   }
 
-  const parsed = orderSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    sendValidationError(res, parsed.error.issues);
-    return;
-  }
+  const parsed = orderSchema.parse(req.body);
 
   const quantities = new Map<string, number>();
 
-  for (const item of parsed.data.items) {
+  for (const item of parsed.items) {
     const quantity =
       (quantities.get(item.productId) ?? 0) +
       item.quantity;
 
     if (!Number.isSafeInteger(quantity)) {
-      res.status(400).json({
-        error: "Combined product quantity is too large.",
-      });
-      return;
+      throw new ApiError(400, "Combined product quantity is too large.");
     }
 
     quantities.set(item.productId, quantity);
@@ -139,10 +127,7 @@ export async function listOrders(
   const auth = req.auth;
 
   if (!auth) {
-    res.status(401).json({
-      error: "Authentication is required.",
-    });
-    return;
+    throw new ApiError(401, "Authentication is required.");
   }
 
   const orders = await prisma.order.findMany({

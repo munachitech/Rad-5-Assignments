@@ -26,7 +26,7 @@ This compiles the project into the `dist` folder.
 
 ## Run the API
 
-Set `DATABASE_URL` and `JWT_SECRET` in the environment, then run:
+Set `DATABASE_URL` and a `JWT_SECRET` of at least 32 bytes in the environment, then run:
 
 ```bash
 npm start
@@ -35,7 +35,8 @@ npm start
 The API listens on port `3000` by default; set `PORT` to override it. All routes are under `/api`.
 
 - `GET /api/health`: health check.
-- `POST /api/auth/register` and `POST /api/auth/login`: create an account or receive a JWT.
+- `POST /api/auth/register` and `POST /api/auth/login`: create an account or receive a JWT. Together, these endpoints allow at most 5 requests per IP every 15 minutes.
+- `GET /api/auth/me`: return the authenticated user's profile.
 - `GET /api/products` and `GET /api/products/:id`: public product listing and detail.
 - `POST /api/products`, `PATCH /api/products/:id`, and `DELETE /api/products/:id`: admin-only product management.
 - `POST /api/orders` and `GET /api/orders`: create an order or list orders for the authenticated customer; admins can list all orders.

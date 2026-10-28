@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { Role } from "../../generated/prisma/client";
+import { ApiError } from "../utils/api-error";
 import { getJwtSecret } from "../utils/jwt-secret";
 
 function isAuthPayload(
@@ -16,7 +17,7 @@ function isAuthPayload(
 
 export function authenticate(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void {
   const authorization = req.header("authorization");
@@ -24,23 +25,22 @@ export function authenticate(
   const token = match?.[1];
 
   if (!token) {
-    res.status(401).json({ error: "A valid bearer token is required." });
+    next(new ApiError(401, "A valid bearer token is required."));
     return;
   }
 
+  const secret = getJwtSecret();
   let payload: string | JwtPayload;
 
   try {
-    payload = jwt.verify(token, getJwtSecret());
+    payload = jwt.verify(token, secret);
   } catch {
-    res.status(401).json({
-      error: "The authentication token is invalid or expired.",
-    });
+    next(new ApiError(401, "The authentication token is invalid or expired."));
     return;
   }
 
   if (!isAuthPayload(payload)) {
-    res.status(401).json({ error: "The authentication token is invalid." });
+    next(new ApiError(401, "The authentication token is invalid."));
     return;
   }
 

@@ -1,8 +1,14 @@
 export function getJwtSecret(): string {
   const secret = process.env["JWT_SECRET"];
 
-  if (!secret) {
-    throw new Error("JWT_SECRET is missing from the environment.");
+  if (
+    !secret ||
+    secret !== secret.trim() ||
+    Buffer.byteLength(secret, "utf8") < 32
+  ) {
+    throw new Error(
+      "JWT_SECRET must be configured as a secret of at least 32 bytes.",
+    );
   }
 
   return secret;

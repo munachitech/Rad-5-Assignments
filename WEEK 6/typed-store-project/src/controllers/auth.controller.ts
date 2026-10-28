@@ -7,22 +7,18 @@ import {
   registrationSchema,
   loginSchema,
 } from "../schemas/auth.schema";
+import { ApiError } from "../utils/api-error";
 import { getJwtSecret } from "../utils/jwt-secret";
-import { sendValidationError } from "../utils/validation";
 
 export async function register(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const parsed = registrationSchema.safeParse(req.body);
+  const parsed = registrationSchema.parse(req.body);
+  const jwtSecret = getJwtSecret();
 
-  if (!parsed.success) {
-    sendValidationError(res, parsed.error.issues);
-    return;
-  }
-
-  const { name, password } = parsed.data;
-  const email = parsed.data.email.toLowerCase();
+  const { name, password } = parsed;
+  const email = parsed.email.toLowerCase();
   const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.create({
@@ -42,7 +38,7 @@ export async function register(
 
   const token = jwt.sign(
     { role: user.role },
-    getJwtSecret(),
+    jwtSecret,
     {
       subject: user.id,
       expiresIn: "1h",
@@ -56,16 +52,12 @@ export async function login(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const parsed = loginSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    sendValidationError(res, parsed.error.issues);
-    return;
-  }
+  const parsed = loginSchema.parse(req.body);
+  const jwtSecret = getJwtSecret();
 
   const user = await prisma.user.findUnique({
     where: {
-      email: parsed.data.email.toLowerCase(),
+      email: parsed.email.toLowerCase(),
     },
     select: {
       id: true,
@@ -79,19 +71,16 @@ export async function login(
   if (
     !user ||
     !(await bcrypt.compare(
-      parsed.data.password,
+      parsed.password,
       user.passwordHash,
     ))
   ) {
-    res.status(401).json({
-      error: "Email or password is incorrect.",
-    });
-    return;
+    throw new ApiError(401, "Email or password is incorrect.");
   }
 
   const token = jwt.sign(
     { role: user.role },
-    getJwtSecret(),
+    jwtSecret,
     {
       subject: user.id,
       expiresIn: "1h",
@@ -114,10 +103,7 @@ export async function getCurrentUser(
   res: Response,
 ): Promise<void> {
   if (!req.auth) {
-    res.status(401).json({
-      error: "Authentication is required.",
-    });
-    return;
+    throw new ApiError(401, "Authentication is required.");
   }
 
   const user = await prisma.user.findUnique({
@@ -131,8 +117,7 @@ export async function getCurrentUser(
   });
 
   if (!user) {
-    res.status(404).json({ error: "User not found." });
-    return;
+    throw new ApiError(404, "User not found.");
   }
 
   res.status(200).json(user);

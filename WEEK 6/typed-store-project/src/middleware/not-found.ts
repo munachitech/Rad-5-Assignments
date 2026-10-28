@@ -1,5 +1,6 @@
-import type { Request, Response } from "express";
+import type { RequestHandler } from "express";
+import { ApiError } from "../utils/api-error";
 
-export function notFound(_req: Request, res: Response): void {
-  res.status(404).json({ error: "Endpoint not found." });
-}
+export const notFound: RequestHandler = (_req, _res, next) => {
+  next(new ApiError(404, "Endpoint not found."));
+};

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { Role } from "../../generated/prisma/client";
+import { ApiError } from "../utils/api-error";
 
 export function requireAdmin(
   req: Request,
@@ -7,14 +8,12 @@ export function requireAdmin(
   next: NextFunction,
 ): void {
   if (!req.auth) {
-    res.status(401).json({ error: "Authentication is required." });
+    next(new ApiError(401, "Authentication is required."));
     return;
   }
 
   if (req.auth.role !== Role.ADMIN) {
-    res.status(403).json({
-      error: "Administrator access is required.",
-    });
+    next(new ApiError(403, "Administrator access is required."));
     return;
   }
 
