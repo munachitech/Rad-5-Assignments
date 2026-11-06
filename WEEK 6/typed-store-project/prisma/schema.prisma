@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -26,7 +26,7 @@ enum OrderStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   email        String   @unique
   passwordHash String
@@ -37,7 +37,7 @@ model User {
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   category    Category
   price       Float
@@ -48,8 +48,8 @@ model Product {
 }
 
 model Order {
-  id        String      @id @default(cuid())
-  userId    String
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String      @db.ObjectId
   user      User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   items     OrderItem[]
   status    OrderStatus @default(pending)
@@ -59,9 +59,9 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String  @db.ObjectId
+  productId String  @db.ObjectId
   quantity  Int
   unitPrice Float
 

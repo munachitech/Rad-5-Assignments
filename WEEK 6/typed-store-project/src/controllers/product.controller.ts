@@ -5,6 +5,7 @@ import {
     productUpdateSchema,
 } from "../schemas/product.schema";
 import { ApiError } from "../utils/api-error";
+import { objectIdSchema } from "../utils/validation";
 
 export async function listProducts(
     _req: Request,
@@ -21,11 +22,7 @@ export async function getProduct(
     req: Request,
     res: Response,
 ): Promise<void> {
-    const productId = req.params.id;
-
-    if (typeof productId !== "string") {
-        throw new ApiError(400, "Invalid product ID.");
-    }
+    const productId = objectIdSchema.parse(req.params.id);
     const product = await prisma.product.findUnique({
         where: { id: productId },
     });
@@ -54,14 +51,12 @@ export async function updateProduct(
     req: Request,
     res: Response,
 ): Promise<void> {
-    const productId = req.params.id;
-    if (!productId) {
+    const rawProductId = req.params.id;
+    if (!rawProductId) {
         throw new ApiError(400, "Product ID is required.");
     }
 
-    if (typeof productId !== "string") {
-        throw new ApiError(400, "Invalid product ID.");
-    }
+    const productId = objectIdSchema.parse(rawProductId);
     const parsed = productUpdateSchema.parse(req.body);
 
     const existing = await prisma.product.findUnique({
@@ -84,14 +79,12 @@ export async function deleteProduct(
     req: Request,
     res: Response,
 ): Promise<void> {
-    const productId = req.params.id;
+    const rawProductId = req.params.id;
 
-    if (!productId) {
+    if (!rawProductId) {
         throw new ApiError(400, "Product ID is required.");
     }
-    if (typeof productId !== "string") {
-        throw new ApiError(400, "Invalid product ID.");
-    }
+    const productId = objectIdSchema.parse(rawProductId);
     const existing = await prisma.product.findUnique({
         where: { id: productId },
     });

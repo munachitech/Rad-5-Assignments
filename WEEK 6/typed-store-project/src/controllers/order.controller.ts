@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../db";
-import { Role } from "../../generated/prisma/client";
+import { Role } from "@prisma/client";
 import { orderSchema } from "../schemas/order.schema";
 import { ApiError } from "../utils/api-error";
 

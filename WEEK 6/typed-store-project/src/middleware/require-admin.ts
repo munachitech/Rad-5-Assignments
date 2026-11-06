@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { Role } from "../../generated/prisma/client";
+import { Role } from "@prisma/client";
 import { ApiError } from "../utils/api-error";
 
 export function requireAdmin(

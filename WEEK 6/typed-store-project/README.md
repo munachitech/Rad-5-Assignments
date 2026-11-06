@@ -1,6 +1,6 @@
 # Typed Store Project
 
-This project includes a TypeScript store manager CLI and a PostgreSQL-backed Express API using Prisma. The CLI continues to demonstrate typed modeling, generic data access, Result-based error handling, and safe validation.
+This project includes a TypeScript store manager CLI and a MongoDB-backed Express API using Prisma. The CLI continues to demonstrate typed modeling, generic data access, Result-based error handling, and safe validation.
 
 ## Install dependencies
 
@@ -26,7 +26,14 @@ This compiles the project into the `dist` folder.
 
 ## Run the API
 
-Set `DATABASE_URL` and a `JWT_SECRET` of at least 32 bytes in the environment, then run:
+Set `DATABASE_URL` to your MongoDB Atlas connection string and set a `JWT_SECRET` of at least 32 bytes in the environment, then run:
+
+```env
+DATABASE_URL="mongodb+srv://<username>:<password>@<cluster-host>/<database>?retryWrites=true&w=majority"
+JWT_SECRET="<your-secret-of-at-least-32-bytes>"
+```
+
+MongoDB transactions used for order creation require a replica set; MongoDB Atlas clusters provide this. After configuring the URL and reviewing `prisma/schema.prisma`, synchronize the schema with `npx prisma db push`. Prisma Migrate is not supported for MongoDB.
 
 ```bash
 npm start

@@ -1,5 +1,9 @@
 import type { Response } from "express";
-import type { ZodIssue } from "zod";
+import { z, type ZodIssue } from "zod";
+
+export const objectIdSchema = z.string().regex(/^[\da-f]{24}$/i, {
+  message: "Invalid ID.",
+});
 
 export function sendValidationError(
   res: Response,

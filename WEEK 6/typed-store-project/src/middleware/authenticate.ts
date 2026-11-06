@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { Role } from "../../generated/prisma/client";
+import { Role } from "@prisma/client";
 import { ApiError } from "../utils/api-error";
 import { getJwtSecret } from "../utils/jwt-secret";
 
