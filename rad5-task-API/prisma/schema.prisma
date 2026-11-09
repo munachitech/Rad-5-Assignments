@@ -1,0 +1,57 @@
+// Database tables for the app
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum ReminderType {
+  DEADLINE
+  STUDY
+  MOTIVATION
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+  tasks     Task[]
+  reminders Reminder[]
+}
+
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id])
+  reminders   Reminder[]
+}
+
+model Reminder {
+  id        Int          @id @default(autoincrement())
+  message   String
+  type      ReminderType @default(DEADLINE)
+  remindAt  DateTime
+  done      Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  taskId    Int?         // optional: link a reminder to one task
+  task      Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+}
