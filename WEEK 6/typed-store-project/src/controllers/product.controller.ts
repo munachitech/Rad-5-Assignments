@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { prisma } from "../db";
+import { apiProductService } from "../services/api-product.service";
 import {
     productSchema,
     productUpdateSchema,
@@ -11,10 +11,7 @@ export async function listProducts(
     _req: Request,
     res: Response,
 ): Promise<void> {
-    const products = await prisma.product.findMany({
-        orderBy: { createdAt: "desc" },
-    });
-
+    const products = await apiProductService.listProducts();
     res.status(200).json(products);
 }
 
@@ -23,14 +20,7 @@ export async function getProduct(
     res: Response,
 ): Promise<void> {
     const productId = objectIdSchema.parse(req.params.id);
-    const product = await prisma.product.findUnique({
-        where: { id: productId },
-    });
-
-    if (!product) {
-        throw new ApiError(404, "Product not found.");
-    }
-
+    const product = await apiProductService.getProductById(productId);
     res.status(200).json(product);
 }
 
@@ -40,10 +30,7 @@ export async function createProduct(
 ): Promise<void> {
     const parsed = productSchema.parse(req.body);
 
-    const product = await prisma.product.create({
-        data: parsed,
-    });
-
+    const product = await apiProductService.createProduct(parsed);
     res.status(201).json(product);
 }
 
@@ -59,19 +46,10 @@ export async function updateProduct(
     const productId = objectIdSchema.parse(rawProductId);
     const parsed = productUpdateSchema.parse(req.body);
 
-    const existing = await prisma.product.findUnique({
-        where: { id: productId },
-    });
-
-    if (!existing) {
-        throw new ApiError(404, "Product not found.");
-    }
-
-    const product = await prisma.product.update({
-        where: { id: productId },
-        data: parsed,
-    });
-
+    const product = await apiProductService.updateProduct(
+        productId,
+        parsed,
+    );
     res.status(200).json(product);
 }
 
@@ -85,17 +63,6 @@ export async function deleteProduct(
         throw new ApiError(400, "Product ID is required.");
     }
     const productId = objectIdSchema.parse(rawProductId);
-    const existing = await prisma.product.findUnique({
-        where: { id: productId },
-    });
-
-    if (!existing) {
-        throw new ApiError(404, "Product not found.");
-    }
-
-    const product = await prisma.product.delete({
-        where: { id: productId },
-    });
-
+    const product = await apiProductService.deleteProduct(productId);
     res.status(200).json(product);
 }

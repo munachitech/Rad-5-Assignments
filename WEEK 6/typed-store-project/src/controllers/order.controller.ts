@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { prisma } from "../db";
 import { Role } from "@prisma/client";
 import { orderSchema } from "../schemas/order.schema";
+import { apiProductService } from "../services/api-product.service";
 import { ApiError } from "../utils/api-error";
 
 export async function createOrder(
@@ -117,6 +118,7 @@ export async function createOrder(
     },
   );
 
+  await apiProductService.invalidateProductListCache();
   res.status(201).json(order);
 }
 

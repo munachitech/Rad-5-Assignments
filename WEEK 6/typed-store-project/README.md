@@ -26,11 +26,12 @@ This compiles the project into the `dist` folder.
 
 ## Run the API
 
-Set `DATABASE_URL` to your MongoDB Atlas connection string and set a `JWT_SECRET` of at least 32 bytes in the environment, then run:
+Set `DATABASE_URL` to your MongoDB Atlas connection string, `REDIS_URL` to your Redis connection string, and set a `JWT_SECRET` of at least 32 bytes in the environment, then run:
 
 ```env
 DATABASE_URL="mongodb+srv://<username>:<password>@<cluster-host>/<database>?retryWrites=true&w=majority"
 JWT_SECRET="<your-secret-of-at-least-32-bytes>"
+REDIS_URL="redis://localhost:6379"
 ```
 
 MongoDB transactions used for order creation require a replica set; MongoDB Atlas clusters provide this. After configuring the URL and reviewing `prisma/schema.prisma`, synchronize the schema with `npx prisma db push`. Prisma Migrate is not supported for MongoDB.
@@ -40,6 +41,22 @@ npm start
 ```
 
 The API listens on port `3000` by default; set `PORT` to override it. All routes are under `/api`.
+
+The public `GET /api/products/` endpoint uses a 60-second Redis cache-aside entry. Its key includes a versioned product-list namespace and the current sort order. Successful product create, update, and delete operations increment the namespace version rather than using wildcard deletion. Successful order creation also invalidates the list because it deducts product stock. If Redis is unavailable, the API logs the failure and reads from MongoDB. If namespace invalidation fails after a successful database write, the write still succeeds; previously cached list data may remain stale for at most the remaining duration of its 60-second TTL.
+
+Run the deterministic cache and product-service unit tests with:
+
+```bash
+npm test
+npm run test:types
+```
+
+For a real Redis integration test, start a Redis instance and set `REDIS_INTEGRATION_URL` to its URL. In PowerShell:
+
+```powershell
+$env:REDIS_INTEGRATION_URL = "redis://localhost:6379"
+npm run test:redis
+```
 
 - `GET /api/health`: health check.
 - `POST /api/auth/register` and `POST /api/auth/login`: create an account or receive a JWT. Together, these endpoints allow at most 5 requests per IP every 15 minutes.
